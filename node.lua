@@ -120,10 +120,8 @@ local function ImageLRU(max_cached)
         return obj
     end
     local function release(obj)
-        pp(loaded)
         for i, img in ipairs(loaded) do
             if img.obj == obj then
-                print(img.obj, obj)
                 img.usage = img.usage - 1
                 assert(img.usage >= 0)
                 return
@@ -589,7 +587,6 @@ local function Player()
 
             local switch = handle_play()
             if switch then
-                pp(switch)
                 next = switch.player
                 next.load()
                 transition = Transition(
