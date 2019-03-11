@@ -1,0 +1,70 @@
+#!/usr/bin/python
+import sys
+from select import select
+from evdev import ecodes, InputDevice, list_devices
+from hosted import node, config, device as ibdevice
+
+screen_w, screen_h = ibdevice.screen_resolution
+
+config.restart_on_update()
+devices = {}
+
+def update_devices():
+    new = set(list_devices("/dev/input/"))
+    old = set(devices.keys())
+
+    for device_name in new - old:
+        device = InputDevice(device_name)
+        devices[device_name] = device
+        import pprint
+        pprint.pprint(device.capabilities(verbose=True))
+        pprint.pprint(device.capabilities(verbose=False))
+        sys.stdout.flush()
+
+    for device_name in old - new:
+        del devices[device_name]
+
+state = dict(
+    down = False,
+    x = 0,
+    y = 0,
+)
+
+def scale(value, abs_info, screen):
+    if abs_info is None:
+        return value
+    vmin = abs_info.min
+    vmax = abs_info.max
+    value_range = vmax - vmin
+    return int(float(screen) / value_range * (value - vmin))
+
+def device_event(device, event):
+    if event.type == ecodes.EV_KEY and event.code == ecodes.BTN_TOUCH:
+        state['down'] = event.value != 0
+    if event.type == ecodes.EV_ABS:
+        info = device.capabilities(verbose=False)
+        abs_infos = dict(info[ecodes.EV_ABS])
+        if event.code == ecodes.ABS_X:
+            state['x'] = scale(
+                event.value, abs_infos.get(ecodes.ABS_X), screen_w
+            )
+        if event.code == ecodes.ABS_Y:
+            state['y'] = scale(
+                event.value, abs_infos.get(ecodes.ABS_Y), screen_h
+            )
+
+def monitor_input():
+    while 1:
+        update_devices()
+        r, w, e = select(devices.values(), [], [], 5)
+        for device in r:
+            try:
+                for ev in device.read():
+                    device_event(device, ev)
+            except IOError:
+                # device disconnected
+                pass
+        node['/input'](state)
+
+if __name__ == "__main__":
+    monitor_input()

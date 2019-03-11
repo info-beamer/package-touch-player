@@ -1,0 +1,114 @@
+{
+    "name": "Content Configuration",
+    "control_ui": "control.html",
+    "custom_ui": "config.html",
+    "optional": [
+        ".*(html|js)$",
+        "^icon-.*"
+    ],
+    "options": [{
+        "title": "Pages",
+        "name": "pages",
+        "type": "list",
+        "itemname": "Page",
+        "items": [{
+            "title": "Name",
+            "ui_width": 3,
+            "name": "name",
+            "type": "string",
+            "default": "Content Page"
+        }, {
+            "title": "UUID",
+            "ui_width": 3,
+            "name": "uuid",
+            "type": "string",
+            "default": ""
+        }, {
+            "title": "Asset",
+            "ui_width": 3,
+            "name": "asset",
+            "type": "resource",
+            "valid": ["image", "video"],
+            "default": "empty.png"
+        }, {
+            "title": "Duration",
+            "ui_width": 3,
+            "name": "duration",
+            "type": "duration",
+            "default": 10
+        }, {
+            "title": "Links",
+            "name": "links",
+            "type": "list",
+            "itemname": "Target",
+            "items": [{
+                "title": "Target page",
+                "ui_width": 3,
+                "name": "target_uuid",
+                "type": "string",
+                "default": ""
+            }, {
+                "title": "Transition",
+                "ui_width": 3,
+                "name": "transition",
+                "type": "select",
+                "options": [
+                    ["l2r", "Scroll right"],
+                    ["r2l", "Scroll left"],
+                    ["t2b", "Scroll down"],
+                    ["b2t", "Scroll up"],
+                    ["zoom_in", "Zoom in"],
+                    ["zoom_out", "Zoom out"],
+                    ["fade", "Fade"]
+                ],
+                "default": "zoom_in"
+            }, {
+                "title": "Type",
+                "ui_width": 3,
+                "name": "type",
+                "type": "select",
+                "options": [
+                    ["touch", "Touch"],
+                    ["timeout", "Timeout"]
+                ],
+                "default": "touch"
+            }, {
+                "title": "Option",
+                "ui_width": 3,
+                "name": "options",
+                "type": "json",
+                "default": {}
+            }]
+        }]
+    }, {
+        "title": "Display rotation",
+        "ui_width": 4,
+        "name": "rotation",
+        "type": "select",
+        "hint": "Rotate content clockwise?",
+        "doc_link": true,
+        "options": [
+            [0, "0"],
+            [90, "90"],
+            [180, "180"],
+            [270, "270"]
+        ],
+        "default": 0
+    }, {
+        "title": "Resolution",
+        "ui_width": 4,
+        "name": "resolution",
+        "type": "json",
+        "default": [1920, 1080]
+    }, {
+        "title": "Touch calibration",
+        "ui_width": 4,
+        "name": "calibration",
+        "type": "select",
+        "options": [
+            ["1:1", "1:1"],
+            ["4000x4000", "4000x4000 -> 1920x1080"]
+        ],
+        "default": "1:1"
+    }]
+}

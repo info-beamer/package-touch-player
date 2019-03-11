@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+  <!-- 
+
+
+  You can edit and test this configuration interface locally.
+  Just run (for example):
+
+    python -m SimpleHTTPServer
+
+  and point your browser to
+  
+    http://localhost:8000/config.html
+
+  You can learn more about custom configuration interfaces
+  at https://info-beamer.com/doc/package-reference#customconfigurationinterface
+
+  
+  -->
+  <head>
+    <meta charset="UTF-8">
+    <style>
+      h2 {
+        margin-top: 0;
+      }
+      .screen-preview {
+        text-align: center;
+        font-size: 0;
+        margin: 20px;
+        user-select: none;
+      }
+      .screen-preview .screen {
+        display: inline-block;
+        border-radius: 8px;
+        border: 6px solid #222;
+        background-color: #555;
+      }
+      .link-target {
+        width: 40px;
+        height: 40px;
+      }
+      .align-top {
+        vertical-align: top;
+      }
+      .target-select {
+        display: inline-block;
+        width: 300px;
+      }
+      .target-transition {
+        display: inline-block;
+        padding: 2px;
+        width: 140px;
+      }
+      .target-page {
+        display: inline-block;
+        padding: 2px;
+        width: 140px;
+      }
+      .timeout-select {
+        display: inline-block;
+        padding: 2px;
+        width: 100px;
+      }
+      .link {
+        position: relative;
+        border: 1px solid #eee;
+        border-radius: 5px;
+        margin-bottom: 10px;
+        padding: 2px 10px;
+      }
+      .link-target {
+        cursor: pointer;
+        color: blue;
+        text-decoration: underline;
+        background-color: gray;
+      }
+      .delete-link {
+        position: absolute;
+        right: 3px;
+        top: 3px;
+      }
+      .page-name {
+        width: 200px;
+        display: inline-block;
+      }
+      .asset-search {
+        width: 200px;
+        display: inline-block;
+        height: 30px;
+      }
+      .asset-popup {
+        position: fixed;
+        top: 0;
+        left: 10px;
+        right: 10px;
+        min-height: 100px;
+        border: 1px solid #ccc;
+        background-color: #fff;
+        box-shadow: 3px 3px 6px 6px rgba(0,0,0,0.1);
+        z-index: 1;
+      }
+      .asset-popup .panel-body {
+        max-height: 400px;
+        overflow-y: scroll;
+      }
+      .asset {
+        background-color: #eee;
+        margin-top: 10px;
+        margin-bottom: 10px;
+      }
+      .asset.highlighted {
+        box-shadow: 0px 0px 4px 4px rgba(120,50,0,0.3);
+      }
+      .asset:hover {
+        box-shadow: 0px 0px 4px 4px rgba(0,0,0,0.5);
+      }
+      .link-preview image {
+        opacity: 0;
+      }
+      .link-preview:hover image {
+        opacity: 0.9;
+      }
+      select option:disabled {
+        color: #aaa;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <div id='app'>
+      <router-view>
+        Loading...
+      </router-view>
+    </div>
+  </body>
+  <script>
+    MOCK_ASSETS = {
+      1: {
+        id: 1,
+        thumb: "package.png",
+        filetype: 'image',
+        filename: 'package.png',
+        uploaded: 1469007145,
+      },
+      2: {
+        id: 2,
+        thumb: "example.jpg",
+        filetype: 'video',
+        filename: 'example.mp4',
+        uploaded: 1469007144,
+        metadata: {
+          duration: 22,
+        },
+      },
+    }
+    MOCK_DEVICES = []
+    MOCK_NODE_ASSETS = {
+      "empty.png": {
+        id: "empty.png",
+        thumb: "empty.png",
+        filetype: 'image',
+        filename: 'empty.png',
+        uploaded: 1469007145,
+      },
+    }
+    MOCK_CONFIG = {
+      rotation: 0,
+      resolution: [1920, 1080],
+      calibration: '4000x4000',
+      pages: [{
+        name: "First",
+        uuid: "606bff07-c785-4b8b-862c-898d77f4f7ce",
+        asset: 2,
+        duration: 5,
+        links: [{
+          target_uuid: "5ec68a87-6747-44a3-a341-83eb7e7c3b9a",
+          transition: "zoom_in",
+          type: "timeout",
+          options: {
+            timeout: 10,
+          }
+        }, {
+          target_uuid: "5ec68a87-6747-44a3-a341-83eb7e7c3b9a",
+          transition: "fade",
+          type: "touch",
+          options: {
+            x1: 0, y1: 100, x2: 500, y2: 1000
+          }
+        }]
+      }, {
+        name: "Second",
+        uuid: "5ec68a87-6747-44a3-a341-83eb7e7c3b9a",
+        asset: 2,
+        duration: 5,
+        links: []
+      }]
+    }
+  </script>
+  <script src="hosted.js"></script>
+  <script src="vue.js"></script>
+  <script src="vue-router.js"></script>
+  <script src="vuex.js"></script>
+  <script src="config.js"></script>
+</html>
