@@ -39,7 +39,7 @@ def scale(value, abs_info, screen):
     return int(float(screen) / value_range * (value - vmin))
 
 def device_event(device, event):
-    if event.type == ecodes.EV_KEY and event.code == ecodes.BTN_TOUCH:
+    if event.type == ecodes.EV_KEY and event.code in (ecodes.BTN_TOUCH, ecodes.BTN_MOUSE, ecodes.BTN_LEFT):
         state['down'] = event.value != 0
     if event.type == ecodes.EV_ABS:
         info = device.capabilities(verbose=False)
