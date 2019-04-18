@@ -860,8 +860,6 @@ Vue.filter('human_duration', value => {
   return value.toFixed(0) + 's'
 })
 
-window.location.hash = '#'
-
 const router = new VueRouter({
   routes: [
     {path: '/', name: 'index', component: PageList},

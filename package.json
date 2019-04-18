@@ -1,7 +1,8 @@
 {
-    "name": "Touch player",
+    "name": "Touch Player",
     "author": "Florian Wesch <fw@info-beamer.com>",
     "desc": "Touch player",
     "version": "alpha1",
-    "lifecycle": "alpha"
+    "lifecycle": "beta",
+    "repository": "https://github.com/info-beamer/package-touch-player"
 }
