@@ -111,5 +111,11 @@
             ["4000x4000", "4000x4000 -> 1920x1080"]
         ],
         "default": "1:1"
+    }, {
+        "title": "Audio",
+        "ui_width": 4,
+        "name": "audio",
+        "type": "boolean",
+        "default": false
     }]
 }

@@ -804,6 +804,14 @@ const PageList = Vue.component('page-list', {
             </option>
           </select>
         </div>
+        <div class='col-xs-3'>
+          <label>Audio</label>
+          <select class="form-control" v-model='audio'>
+            <option :value='opt[0]' v-for='opt in audio_options'>
+              {{opt[1]}}
+            </option>
+          </select>
+        </div>
       </div>
     </div>
   `,
@@ -818,6 +826,10 @@ const PageList = Vue.component('page-list', {
       [90, "90° clockwise"],
       [180, "180°"],
       [270, "270°"],
+    ],
+    audio_options: [
+      [false, "No audio"],
+      [true, "For all videos"],
     ],
   }),
   computed: {
@@ -842,7 +854,18 @@ const PageList = Vue.component('page-list', {
           val: v,
         })
       },
-    }
+    },
+    audio: {
+      get() {
+        return this.$store.state.config.audio || false
+      },
+      set(v) {
+        this.$store.commit('set_config', {
+          key: 'audio',
+          val: v,
+        })
+      },
+    },
   },
   methods: {
     delete_page(uuid) {

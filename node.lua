@@ -16,6 +16,7 @@ pcall(function()
     print("detected frame delay is", frame_delay)
 end)
 
+local audio = false
 local input_state = { down = false, x = 0, y = 0, }
 
 local function VirtualScreen()
@@ -383,6 +384,7 @@ local function Video(file)
             raw = true,
             looped = true,
             paused = true,
+            audio = audio,
         }
     end
 
@@ -651,7 +653,7 @@ util.json_watch("config.json", function(config)
         res_x = w,
         res_y = h,
     }
-
+    audio = config.audio
     player.set_pages(config.pages)
 end)
 
