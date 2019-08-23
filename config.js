@@ -819,6 +819,7 @@ const PageList = Vue.component('page-list', {
     resolutions: [
       [[800,   480], "800x480"],
       [[1280,  720], "1280x720 HD"],
+      [[1280, 1024], "1280x1024 5:4"],
       [[1920, 1080], "1920x1080 FullHD"],
     ],
     rotations: [
