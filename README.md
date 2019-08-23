@@ -60,3 +60,9 @@ or by clicking on the small preview next to 3./4.
 
 If you need help with this package, you can post to this thread on the
 [info-beamer community forum](https://community.infobeamer.com/t/404).
+
+# Changelog
+
+## Version 2019-08-23
+
+Now marked as compatible with the Pi4

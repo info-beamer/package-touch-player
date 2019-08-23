@@ -2,7 +2,8 @@
     "name": "Touch Player",
     "author": "Florian Wesch <fw@info-beamer.com>",
     "desc": "Create interactive touch displays image/video content",
-    "version": "alpha1",
+    "version": "2019-08-23",
     "lifecycle": "beta",
-    "repository": "https://github.com/info-beamer/package-touch-player"
+    "repository": "https://github.com/info-beamer/package-touch-player",
+    "platforms": ["pi/epoch-1", "pi-4"]
 }
