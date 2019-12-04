@@ -63,6 +63,10 @@ If you need help with this package, you can post to this thread on the
 
 # Changelog
 
+## Version 2019-12-04
+
+* Support new asset chooser
+
 ## Version 2019-08-23
 
-Now marked as compatible with the Pi4
+* Now marked as compatible with the Pi4

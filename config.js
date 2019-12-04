@@ -111,28 +111,28 @@ const store = new Vuex.Store({
       }
     },
     update_page(state, {uuid, key, val}) {
-      for (let page of state.config.pages) {
+      for (const page of state.config.pages) {
         if (page.uuid == uuid) {
           page[key] = val
         }
       }
     },
     add_link(state, {uuid, link}) {
-      for (let page of state.config.pages) {
+      for (const page of state.config.pages) {
         if (page.uuid == uuid) {
           page.links.push(link)
         }
       }
     },
     delete_link(state, {uuid, link_id}) {
-      for (let page of state.config.pages) {
+      for (const page of state.config.pages) {
         if (page.uuid == uuid) {
           page.links.splice(link_id, 1)
         }
       }
     },
     update_link(state, {uuid, link_id, key, val}) {
-      for (let page of state.config.pages) {
+      for (const page of state.config.pages) {
         if (page.uuid == uuid) {
           Vue.set(page.links[link_id], key, val)
         }
@@ -191,10 +191,6 @@ Vue.component('asset-browser', {
             class='btn btn-md pull-right'>
             <span class='glyphicon glyphicon-remove'></span>
           </div>
-          <div v-if='help' class='btn btn-sm pull-right'>
-            <span class='glyphicon glyphicon-info-sign'></span>
-            {{help}}
-          </div>
         </div>
         <div class="panel-body">
           <div class="row asset-icon">
@@ -216,7 +212,7 @@ Vue.component('asset-browser', {
       </div>
     </span>
   `,
-  props: ["valid", "title", "help"],
+  props: ["valid", "title", "selected"],
   data: () => ({
     sorted: "filename",
     open: false,
@@ -234,7 +230,7 @@ Vue.component('asset-browser', {
     },
     assets() {
       let valid = {}
-      for (let v of this.valid.split(",")) {
+      for (const v of this.valid.split(",")) {
         valid[v] = true
       }
       let all_assets = []
@@ -243,7 +239,7 @@ Vue.component('asset-browser', {
         return haystack.search(this.search.toLocaleLowerCase()) != -1
       }
       function add_all(assets) {
-        for (let asset_id in assets) {
+        for (const asset_id in assets) {
           const asset = assets[asset_id]
           if (valid[asset.filetype] && filter(asset)) {
             all_assets.push({
@@ -287,6 +283,31 @@ Vue.component('asset-browser', {
     }
   },
 })
+
+function install_native_asset_chooser() {
+  console.log("installing native asset chooser");
+  delete Vue.options.components['asset-browser'];
+  Vue.component('asset-browser', {
+    template: `
+      <button class='btn btn-default btn-block' @click="onOpen">
+        {{title}}
+      </button>
+    `,
+    props: ["valid", "title", "selected_asset_spec"],
+    methods: {
+      async onOpen() {
+        const selected = await ib.assetChooser({
+          selected_asset_spec: this.selected_asset_spec,
+          filter: this.valid.split(',')
+        })
+        if (selected) {
+          this.$emit('assetSelected', selected.id);
+        }
+      },
+    }
+  })
+}
+
 
 Vue.component('screen-preview', {
   template: `
@@ -507,7 +528,7 @@ Vue.component('link-edit', {
         disabled: true, name: '☰ Your Pages',
       })
 
-      for (var page of this.$store.getters.sorted_pages) {
+      for (const page of this.$store.getters.sorted_pages) {
         pages.push(page)
       }
       pages.push({
@@ -558,13 +579,14 @@ const PageEdit = Vue.component('page-edit', {
         <div class='col-xs-3'>
           <asset-browser
             valid="image,video"
-            title="Set page asset"
+            title="Select page asset"
+            :selected_asset_spec="asset.id"
             @assetSelected="select_asset"
           />
         </div>
       </div>
       <screen-preview
-        :max_width='700' :max_height='800'
+        :max_width='736' :max_height='800'
         @area='add_touch' @click='click'
       >
         <image
@@ -660,7 +682,7 @@ const PageEdit = Vue.component('page-edit', {
       return this.links.filter((l) => l.type == 'touch')
     },
     has_timeout() {
-      for (let link of this.current_page.links) {
+      for (const link of this.current_page.links) {
         if (link.type == "timeout")
           return true
       }
@@ -894,6 +916,9 @@ const router = new VueRouter({
 ib.setDefaultStyle()
 
 ib.ready.then(() => {
+  if (ib.assetChooser) {
+    install_native_asset_chooser()
+  }
   store.dispatch('init', {
     assets: ib.assets,
     node_assets: ib.node_assets,
