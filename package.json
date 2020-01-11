@@ -4,5 +4,9 @@
     "desc": "Create interactive touch displays image/video content",
     "version": "2019-12-04",
     "repository": "https://github.com/info-beamer/package-touch-player",
-    "platforms": ["pi/epoch-1", "pi-4"]
+    "platforms": ["pi/epoch-1", "pi-4"],
+    "nesting": {
+        "parents": ["top-level"],
+        "childs": []
+    }
 }
