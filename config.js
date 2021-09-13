@@ -452,6 +452,22 @@ Vue.component('link-edit', {
           </option>
         </select>
       </span>
+      <span v-if='link.type == "gpio"'>
+        on GPIO Pin
+        <select class="form-control gpio-select" v-model='gpio'>
+          <option :value='gpio.value' v-for='gpio in gpios'>
+            {{gpio.text}}
+          </option>
+        </select>
+      </span>
+      <span v-if='link.type == "key"'>
+        on press of 
+        <select class="form-control key-select" v-model='key'>
+          <option :value='key.v' v-for='key in keys'>
+            {{key.text}}
+          </option>
+        </select>
+      </span>
 
       <button class='btn btn-danger btn-xs delete-link' @click='delete_link(link_id)'>
         ✗
@@ -486,6 +502,32 @@ Vue.component('link-edit', {
         })
       },
     },
+    key: {
+      get() {
+        return this.link.options.key
+      },
+      set(v) {
+        this.$store.commit('update_link', {
+          uuid: this.page.uuid,
+          link_id: this.link.id,
+          key: 'options', val: {
+            key: v,
+          }
+        })
+      },
+    },
+    gpio: {
+      get() {
+        return this.link.options
+      },
+      set(v) {
+        this.$store.commit('update_link', {
+          uuid: this.page.uuid,
+          link_id: this.link.id,
+          key: 'options', val: v
+        })
+      },
+    },
     timeouts() {
       let timeouts = [
         {disabled: 'Defaults'},
@@ -504,6 +546,109 @@ Vue.component('link-edit', {
         }
       }
       return timeouts
+    },
+    gpios() {
+      let gpios = []
+      for (let pin of [5, 6, 16, 17, 22, 23, 24, 25, 26, 27]) {
+        gpios.push({value: {pin: pin, active_high: true}, text: pin + ' (active high)'})
+        gpios.push({value: {pin: pin, active_high: false}, text: pin + ' (active low)'})
+      }
+      return gpios
+    },
+    keys() {
+      return [
+        {v: "space", text: "Space Key"},
+        {v: "a", text: "Key 'A'"},
+        {v: "b", text: "Key 'B'"},
+        {v: "c", text: "Key 'C'"},
+        {v: "d", text: "Key 'D'"},
+        {v: "e", text: "Key 'E'"},
+        {v: "f", text: "Key 'F'"},
+        {v: "g", text: "Key 'G'"},
+        {v: "h", text: "Key 'H'"},
+        {v: "i", text: "Key 'I'"},
+        {v: "j", text: "Key 'J'"},
+        {v: "k", text: "Key 'K'"},
+        {v: "l", text: "Key 'L'"},
+        {v: "m", text: "Key 'M'"},
+        {v: "n", text: "Key 'N'"},
+        {v: "o", text: "Key 'O'"},
+        {v: "p", text: "Key 'P'"},
+        {v: "q", text: "Key 'Q'"},
+        {v: "r", text: "Key 'R'"},
+        {v: "s", text: "Key 'S'"},
+        {v: "t", text: "Key 'T'"},
+        {v: "u", text: "Key 'U'"},
+        {v: "v", text: "Key 'V'"},
+        {v: "w", text: "Key 'W'"},
+        {v: "x", text: "Key 'X'"},
+        {v: "y", text: "Key 'Y'"},
+        {v: "z", text: "Key 'Z'"},
+
+        {v: "0", text: "Key '0'"},
+        {v: "1", text: "Key '1'"},
+        {v: "2", text: "Key '2'"},
+        {v: "3", text: "Key '3'"},
+        {v: "4", text: "Key '4'"},
+        {v: "5", text: "Key '5'"},
+        {v: "6", text: "Key '6'"},
+        {v: "7", text: "Key '7'"},
+        {v: "8", text: "Key '8'"},
+        {v: "9", text: "Key '9'"},
+
+        {v: "kp0", text: "Numpad 0"},
+        {v: "kp1", text: "Numpad 1"},
+        {v: "kp2", text: "Numpad 2"},
+        {v: "kp3", text: "Numpad 3"},
+        {v: "kp4", text: "Numpad 4"},
+        {v: "kp5", text: "Numpad 5"},
+        {v: "kp6", text: "Numpad 6"},
+        {v: "kp7", text: "Numpad 7"},
+        {v: "kp8", text: "Numpad 8"},
+        {v: "kp9", text: "Numpad 9"},
+
+        {v: "kpdot",      text: "Numpad ,"},
+        {v: "kpslash",    text: "Numpad /"},
+        {v: "kpplus",     text: "Numpad +"},
+        {v: "kpminus",    text: "Numpad -"},
+        {v: "kpasterisk", text: "Numpad *"},
+        {v: "kpenter",    text: "Numpad Enter"},
+        {v: "numlock",    text: "Num Lock"},
+
+        {v: "f1", text: "F1"},
+        {v: "f2", text: "F2"},
+        {v: "f3", text: "F3"},
+        {v: "f4", text: "F4"},
+        {v: "f5", text: "F5"},
+        {v: "f6", text: "F6"},
+        {v: "f7", text: "F7"},
+        {v: "f8", text: "F8"},
+        {v: "f9", text: "F9"},
+        {v: "f10",text: "F10"},
+        {v: "f11",text: "F11"},
+        {v: "f12",text: "F12"},
+
+        {v: "left", text: "Cursor Left"},
+        {v: "right", text: "Cursor Right"},
+        {v: "up", text: "Cursor Up"},
+        {v: "down", text: "Cursor Down"},
+
+        {v: "leftshift", text: "Left Shift"},
+        {v: "leftctrl", text: "Left Ctrl"},
+        {v: "leftalt", text: "Left Alt"},
+        {v: "leftmeta", text: "Left Meta"},
+        {v: "rightshift", text: "Right Shift"},
+        {v: "rightctrl", text: "Right Ctrl"},
+        {v: "rightalt", text: "Right Alt"},
+        {v: "rightmeta", text: "Right Meta"},
+
+        {v: "backspace", text: "Backspace"},
+        {v: "compose", text: "Compose"},
+        {v: "capslock", text: "Capslock"},
+        {v: "esc", text: "Escape"},
+        {v: "enter", text: "Enter"},
+        {v: "tab", text: "Tab"},
+      ]
     },
     target_uuid: {
       get() {
@@ -546,7 +691,8 @@ Vue.component('link-edit', {
         ["b2t", "Slide down"],
         ["zoom_in", "Zoom in"],
         ["zoom_out", "Zoom out"],
-        ["fade", "Fade"]
+        ["fade", "Fade"],
+        ["none", "Instant switch"]
       ]
     }
   },
@@ -626,6 +772,12 @@ const PageEdit = Vue.component('page-edit', {
         <button class='btn btn-default align-top' @click='add_timeout' v-if='!has_timeout'>
           Add timeout
         </button>
+        <button class='btn btn-default align-top' @click='add_gpio'>
+          Add GPIO
+        </button>
+        <button class='btn btn-default align-top' @click='add_key'>
+          Add Keypress
+        </button>
       </div>
     </div>
   `,
@@ -679,7 +831,7 @@ const PageEdit = Vue.component('page-edit', {
       return links
     },
     touch_links() {
-      return this.links.filter((l) => l.type == 'touch')
+      return this.links.filter(l => l.type == 'touch')
     },
     has_timeout() {
       for (const link of this.current_page.links) {
@@ -772,6 +924,33 @@ const PageEdit = Vue.component('page-edit', {
             y1: area.y1,
             x2: area.x2,
             y2: area.y2,
+          }
+        }
+      })
+    },
+    add_key() {
+      this.$store.commit('add_link', {
+        uuid: this.current_uuid,
+        link: {
+          target_uuid: this.default_uuid,
+          transition: 'zoom_in',
+          type: 'key',
+          options: {
+            key: 'enter',
+          }
+        }
+      })
+    },
+    add_gpio() {
+      this.$store.commit('add_link', {
+        uuid: this.current_uuid,
+        link: {
+          target_uuid: this.default_uuid,
+          transition: 'zoom_in',
+          type: 'gpio',
+          options: {
+            pin: 23,
+            active_high: true,
           }
         }
       })

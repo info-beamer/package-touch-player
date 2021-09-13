@@ -2,6 +2,10 @@
     "name": "Content Configuration",
     "control_ui": "control.html",
     "custom_ui": "config.html",
+    "permissions": {
+        "gpio": "Might need access to GPIO",
+        "input": "Might need access to input devices"
+    },
     "optional": [
         ".*(html|js)$",
         "^icon-.*",
@@ -60,7 +64,8 @@
                     ["b2t", "Scroll up"],
                     ["zoom_in", "Zoom in"],
                     ["zoom_out", "Zoom out"],
-                    ["fade", "Fade"]
+                    ["fade", "Fade"],
+                    ["none", "Instant"]
                 ],
                 "default": "zoom_in"
             }, {
@@ -70,7 +75,9 @@
                 "type": "select",
                 "options": [
                     ["touch", "Touch"],
-                    ["timeout", "Timeout"]
+                    ["timeout", "Timeout"],
+                    ["key", "Key Press"],
+                    ["gpio", "GPIO Event"]
                 ],
                 "default": "touch"
             }, {
@@ -117,5 +124,11 @@
         "name": "audio",
         "type": "boolean",
         "default": false
+    }, {
+        "title": "Transition time",
+        "ui_width": 4,
+        "name": "transition_time",
+        "type": "float",
+        "default": 0.3
     }]
 }

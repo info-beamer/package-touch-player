@@ -1,7 +1,5 @@
 util.no_globals()
 
-local TRANSITION_TIME = 0.3
-
 local json = require "json"
 local matrix = require "matrix2d"
 local easing = require "easing"
@@ -17,7 +15,11 @@ pcall(function()
 end)
 
 local audio = false
-local input_state = { down = false, x = 0, y = 0, }
+local transition_time = 0.3
+
+local touch_state = { down = false, x = 0, y = 0, }
+local gpio_state = {}
+local keypresses = {}
 
 local function VirtualScreen()
     local screen, virtual2pixel, pixel2virtual
@@ -239,7 +241,21 @@ local function Image(file)
                     1 - progress
                 )
             end,
-        }
+        },
+        none = {
+            enter = function(progress)
+                draw_res(res, 0, 0, WIDTH, HEIGHT, 1)
+            end,
+            exit = function(progress, step)
+                if step == 0 then
+                    -- Draw image for one frame. When switching away to
+                    -- videos, those are placed on the screen with a minimal
+                    -- delay within the first frame and not drawing the
+                    -- image might result in a short blank flash.
+                    draw_res(res, 0, 0, WIDTH, HEIGHT, 1)
+                end
+            end,
+        },
     }
 
     local function load()
@@ -250,13 +266,13 @@ local function Image(file)
         return res and res:state() ~= "loading"
     end
 
-    local function draw(mode, effect, progress)
+    local function draw(mode, effect, progress, step)
         if mode == "play" then
             draw_res(res, 0, 0, WIDTH, HEIGHT)
         elseif mode == "load" then
             draw_res(res, 0, 0, WIDTH, HEIGHT) --, .95)
         else
-            effects[effect][mode](progress)
+            effects[effect][mode](progress, step)
         end
     end
 
@@ -376,6 +392,14 @@ local function Video(file)
                 )
             end,
         },
+        none = {
+            enter = function(progress, step)
+                draw_res(res, -1, 1)
+            end,
+            exit = function(progress)
+                draw_res(res, -2, 1)
+            end,
+        },
     }
 
     local function load()
@@ -392,7 +416,7 @@ local function Video(file)
         return res and res:state() ~= "loading"
     end
 
-    local function draw(mode, effect, progress)
+    local function draw(mode, effect, progress, step)
         if mode == "exit" then
             res:stop()
         else
@@ -403,7 +427,7 @@ local function Video(file)
         elseif mode == "load" then
             draw_res(res, -1, 1) -- .95)
         else
-            effects[effect][mode](progress)
+            effects[effect][mode](progress, step)
         end
     end
 
@@ -423,6 +447,7 @@ end
 local function Transition(exit_t, enter_t, exit_effect, enter_effect)
     local exit_start, exit_end
     local enter_start, enter_end
+    local enter_step, exit_step
     local ends
 
     local function start(t)
@@ -432,6 +457,8 @@ local function Transition(exit_t, enter_t, exit_effect, enter_effect)
         exit_end = ends
         enter_start = ends - enter_t
         enter_end = ends
+        enter_step = 0
+        exit_step = 0
     end
 
     local function progress(t, starts, ends)
@@ -453,6 +480,16 @@ local function Transition(exit_t, enter_t, exit_effect, enter_effect)
         end;
         completed = function(t)
             return t >= ends
+        end;
+        enter_step = function()
+            local step = enter_step
+            enter_step = enter_step + 1
+            return step
+        end;
+        exit_step = function()
+            local step = exit_step
+            exit_step = exit_step + 1
+            return step
         end;
     }
 end
@@ -497,7 +534,7 @@ local function Player()
     end
 
     local function transition_to_page(page_uuid, effect, time)
-        print("transition init to ", page_uuid, effect, time)
+        print("transition init to ", page_uuid, effect, time, #history)
         if page_uuid == "home" then
             history = {}
             page_uuid = home.uuid
@@ -514,6 +551,10 @@ local function Player()
         last_switch = sys.now()
         history[#history+1] = page.uuid
 
+        if #history > 32 then
+            table.remove(history, 1)
+        end
+
         return {
             player = ({
                 image = Image,
@@ -527,20 +568,22 @@ local function Player()
     end
 
     local white = resource.create_colored_texture(1,1,1,1)
+
+    -- Require removing touch first before accepting the next touch, so
+    -- leaving the finger on the display won't cause a multiple touches.
     local accept_touch = true
 
-    local function handle_play()
+    local function decide_switch()
         if not page then
             print "no current page. going back home"
             return transition_to_page(
-                home.uuid, "zoom_in",
-                TRANSITION_TIME
+                home.uuid, "zoom_in", transition_time
             )
         end
 
-        if input_state.down then
+        if touch_state.down then
             if accept_touch then
-                local touch_x, touch_y = input_state.x, input_state.y
+                local touch_x, touch_y = touch_state.x, touch_state.y
                 print("touch test", touch_x, touch_y)
                 for i, link in ipairs(page.links) do
                     if link.type == "touch" and
@@ -548,8 +591,7 @@ local function Player()
                        touch_y > link.options.y1 and touch_y < link.options.y2 
                     then
                         local switch = transition_to_page(
-                            link.target_uuid, link.transition,
-                            TRANSITION_TIME
+                            link.target_uuid, link.transition, transition_time
                         )
                         if switch then
                             accept_touch = false
@@ -568,15 +610,33 @@ local function Player()
         end
 
         for i, link in ipairs(page.links) do
+            if link.type == "gpio" and
+               gpio_state[link.options.pin] == link.options.active_high
+            then
+                return transition_to_page(
+                    link.target_uuid, link.transition, transition_time
+                )
+            end
+
             if link.type == "timeout" and
                sys.now() > last_switch + link.options.timeout
             then
-                accept_touch = true
                 return transition_to_page(
-                    link.target_uuid, link.transition,
-                    TRANSITION_TIME
+                    link.target_uuid, link.transition, transition_time
                 )
            end
+       end
+
+       while #keypresses > 0 do
+           local pressed_key = table.remove(keypresses, 1)
+           for i, link in ipairs(page.links) do
+               if link.type == "key" and link.options.key == pressed_key then
+                   return transition_to_page(
+                       link.target_uuid, link.transition, transition_time
+                   )
+               end
+           end
+           print("dropped key input", pressed_key)
        end
     end
 
@@ -587,7 +647,7 @@ local function Player()
         if state == "play" then
             current.draw "play"
 
-            local switch = handle_play()
+            local switch = decide_switch()
             if switch then
                 next = switch.player
                 next.load()
@@ -613,11 +673,13 @@ local function Player()
             local now = sys.now()
             current.draw("exit",
                 transition.exit_effect, 
-                transition.exit_progress(now+current.frame_delay)
+                transition.exit_progress(now+current.frame_delay),
+                transition.exit_step()
             )
             next.draw("enter",
                 transition.enter_effect, 
-                transition.enter_progress(now+next.frame_delay)
+                transition.enter_progress(now+next.frame_delay),
+                transition.enter_step()
             )
             if transition.completed(now) then
                 current.unload()
@@ -636,14 +698,24 @@ end
 local player = Player()
 
 util.data_mapper{
-    input = function(raw)
-        input_state = json.decode(raw)
+    touch = function(raw)
+        touch_state = json.decode(raw)
         -- coordinates are native screen coordinates and
         -- must be unprojected to the virtual screen space.
-        input_state.x, input_state.y = screen.unproject(
-            input_state.x, input_state.y
+        touch_state.x, touch_state.y = screen.unproject(
+            touch_state.x, touch_state.y
         )
-    end
+    end,
+    gpio = function(raw)
+        local gpio_event = json.decode(raw)
+        gpio_state[gpio_event.pin] = gpio_event.high
+    end,
+    keyboard = function(raw)
+        local key_event = json.decode(raw)
+        if key_event.action == "up" then
+            keypresses[#keypresses+1] = key_event.key
+        end
+    end,
 }
 
 util.json_watch("config.json", function(config)
@@ -654,6 +726,7 @@ util.json_watch("config.json", function(config)
         res_y = h,
     }
     audio = config.audio
+    transition_time = config.transition_time
     player.set_pages(config.pages)
 end)
 
