@@ -5,6 +5,10 @@
     "version": "2021-09-13",
     "repository": "https://github.com/info-beamer/package-touch-player",
     "platforms": ["pi/epoch-1", "pi-4"],
+    "offline": {
+        "support": "yes",
+        "info": "This package doesn't need an internet connection and relies on local content only"
+    },
     "nesting": {
         "parents": ["top-level"],
         "childs": []
