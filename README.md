@@ -63,6 +63,10 @@ If you need help with this package, you can post to this thread on the
 
 # Changelog
 
+## Version 2021-09-15
+
+* Update support for preserving content aspect ratio
+
 ## Version 2021-09-13
 
 * Added GPIO and keyboard support
