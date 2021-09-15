@@ -15,6 +15,7 @@ pcall(function()
 end)
 
 local audio = false
+local scale = true
 local transition_time = 0.3
 
 local touch_state = { down = false, x = 0, y = 0, }
@@ -145,7 +146,15 @@ local function Image(file)
     local res
 
     local function draw_res(res, x1, y1, x2, y2, alpha)
-        return res:draw(x1, y1, x2, y2, alpha or 1)
+        if scale then
+            local state, width, height = res:state()
+            if width and height then
+                local xoff1, yoff1, xoff2, yoff2 = util.scale_into(x2-x1, y2-y1, width, height)
+                return res:draw(x1+xoff1, y1+yoff1, x1+xoff2, y1+yoff2, alpha or 1)
+            end
+        else
+            return res:draw(x1, y1, x2, y2, alpha or 1)
+        end
     end
 
     local effects = {
@@ -297,9 +306,15 @@ local function Video(file)
         y1_add = y1_add or 0
         x2_add = x2_add or x1_add
         y2_add = y2_add or y1_add
-        local _, w, h = res:state()
-        if w and h then
-            screen.video(res, x1_add, y1_add, WIDTH+x2_add, HEIGHT+y2_add, layer, alpha)
+        local x1, y1, x2, y2 = x1_add, y1_add, WIDTH+x2_add, HEIGHT+y2_add
+        local _, width, height = res:state()
+        if width and height then
+            if scale then
+                local xoff1, yoff1, xoff2, yoff2 = util.scale_into(x2-x1, y2-y1, width, height)
+                return screen.video(res, x1+xoff1, y1+yoff1, x1+xoff2, y1+yoff2, layer, alpha)
+            else
+                return screen.video(res, x1, y1, x2, y2, layer, alpha)
+            end
         end
     end
 
@@ -726,6 +741,7 @@ util.json_watch("config.json", function(config)
         res_y = h,
     }
     audio = config.audio
+    scale = config.scale
     transition_time = config.transition_time
     player.set_pages(config.pages)
 end)

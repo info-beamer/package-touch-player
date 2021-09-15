@@ -25,6 +25,8 @@ const store = new Vuex.Store({
       pages: [],
       resolution: [1920, 1080],
       rotation: 0,
+      audio: false,
+      scale: false,
     },
   },
   getters: {
@@ -160,154 +162,26 @@ const store = new Vuex.Store({
   }
 })
 
+
 Vue.component('asset-browser', {
   template: `
-    <span>
-      <button class='btn btn-default' v-if="open" @click="onToggleOpen">
-        {{title}} ▴
-      </button>
-      <button class='btn btn-default' v-else @click="onToggleOpen">
-        {{title}} ▾
-      </button>
-      <div
-        v-if="open"
-        class='asset-popup popup panel panel-default'
-        :style="{top: top + 'px'}">
-        <div class="panel-heading">
-          Asset Select
-          <button class='btn btn-sm btn-default' @click='sorted = "filename"'>
-            By Filename
-          </button>
-          <button class='btn btn-sm btn-default' @click='sorted = "upload"'>
-            By Upload Time
-          </button>
-          <input class='form-control asset-search'
-            placeholder="Search.."
-            @keyup='search=$event.target.value'
-            @change='search=$event.target.value'
-          />
-          <div
-            @click="open = false"
-            class='btn btn-md pull-right'>
-            <span class='glyphicon glyphicon-remove'></span>
-          </div>
-        </div>
-        <div class="panel-body">
-          <div class="row asset-icon">
-            <div class="col-xs-2" v-for="asset in assets">
-              <img
-                class='asset'
-                :class="{highlighted: highlight && highlight.id == asset.id}"
-                :src="asset.thumb"
-                @click="onSelect(asset.id)"
-                @mouseover="onHighlight(asset.id)">
-              </img>
-            </div>
-            <em class='col-xs-12' v-if='assets.length == 0'>No assets found</em>
-          </div>
-        </div>
-        <div class="panel-footer">
-          {{info}}
-        </div>
-      </div>
-    </span>
+    <button class='btn btn-default btn-block' @click="onOpen">
+      {{title}}
+    </button>
   `,
-  props: ["valid", "title", "selected"],
-  data: () => ({
-    sorted: "filename",
-    open: false,
-    highlight: undefined,
-    search: "",
-    top: 0,
-  }),
-  computed: {
-    info() {
-      if (this.highlight == undefined) {
-        return "Click to select an asset"
-      } else {
-        return this.highlight.filename + " (" + this.highlight.filetype + ")"
-      }
-    },
-    assets() {
-      let valid = {}
-      for (const v of this.valid.split(",")) {
-        valid[v] = true
-      }
-      let all_assets = []
-      const filter = asset => {
-        const haystack = (asset.filename + ' ' + asset.filetype).toLocaleLowerCase()
-        return haystack.search(this.search.toLocaleLowerCase()) != -1
-      }
-      function add_all(assets) {
-        for (const asset_id in assets) {
-          const asset = assets[asset_id]
-          if (valid[asset.filetype] && filter(asset)) {
-            all_assets.push({
-              id: asset.id,
-              thumb: asset.thumb,
-              filename: asset.filename,
-              filetype: asset.filetype,
-              uploaded: asset.uploaded || 0,
-              metadata: asset.metadata || {duration: 10},
-            })
-          }
-        }
-      }
-      add_all(this.$store.state.assets)
-      // add_all(this.$store.state.node_assets)
-      all_assets.sort({
-        filename: (a, b) => {
-          const fa = a.filename.toLocaleLowerCase()
-          const fb = b.filename.toLocaleLowerCase()
-          return fa.localeCompare(fb)
-        },
-        upload: (a, b) => { 
-          return b.uploaded - a.uploaded
-        },
-      }[this.sorted])
-      return all_assets
-    }
-  },
+  props: ["valid", "title", "selected_asset_spec"],
   methods: {
-    onToggleOpen(evt) {
-      this.open = !this.open
-      this.top = evt.target.getBoundingClientRect().bottom + 5
+    async onOpen() {
+      const selected = await ib.assetChooser({
+        selected_asset_spec: this.selected_asset_spec,
+        filter: this.valid.split(',')
+      })
+      if (selected) {
+        this.$emit('assetSelected', selected.id);
+      }
     },
-    onSelect(asset_spec) {
-      this.$emit('assetSelected', asset_spec)
-      this.open = false
-    },
-    onHighlight(asset_spec) {
-      this.highlight = this.$store.state.assets[asset_spec] || 
-                       this.$store.state.node_assets[asset_spec]
-    }
-  },
+  }
 })
-
-function install_native_asset_chooser() {
-  console.log("installing native asset chooser");
-  delete Vue.options.components['asset-browser'];
-  Vue.component('asset-browser', {
-    template: `
-      <button class='btn btn-default btn-block' @click="onOpen">
-        {{title}}
-      </button>
-    `,
-    props: ["valid", "title", "selected_asset_spec"],
-    methods: {
-      async onOpen() {
-        const selected = await ib.assetChooser({
-          selected_asset_spec: this.selected_asset_spec,
-          filter: this.valid.split(',')
-        })
-        if (selected) {
-          this.$emit('assetSelected', selected.id);
-        }
-      },
-    }
-  })
-}
-
 
 Vue.component('screen-preview', {
   template: `
@@ -737,7 +611,7 @@ const PageEdit = Vue.component('page-edit', {
       >
         <image
           :href='asset.thumb + "?size=500&crop=none"'
-          preserveAspectRatio="none"
+          :preserveAspectRatio='aspect_ratio'
           :width='$store.getters.screen.w'
           :height='$store.getters.screen.h'
         />
@@ -830,6 +704,10 @@ const PageEdit = Vue.component('page-edit', {
       }
       return links
     },
+    aspect_ratio() {
+      let scale = this.$store.state.config.scale
+      return scale ? 'xMidYMid meet' : 'none'
+    },
     touch_links() {
       return this.links.filter(l => l.type == 'touch')
     },
@@ -891,6 +769,22 @@ const PageEdit = Vue.component('page-edit', {
         key: 'asset',
         val: asset_id,
       })
+      let asset = this.$store.getters.all_assets[asset_id]
+      let duration = 10
+      if (asset.filetype == "video") {
+        duration = asset.metadata.duration
+      }
+      for (let link of this.links) {
+        if (link.type != "timeout")
+          continue
+        this.$store.commit('update_link', {
+          uuid: this.current_uuid,
+          link_id: link.id,
+          key: 'options', val: {
+            timeout: duration
+          }
+        })
+      }
     },
     add_timeout() {
       this.$store.commit('add_link', {
@@ -1013,6 +907,14 @@ const PageList = Vue.component('page-list', {
             </option>
           </select>
         </div>
+        <div class='col-xs-3'>
+          <label>Scaling</label>
+          <select class="form-control" v-model='scale'>
+            <option :value='opt[0]' v-for='opt in scale_options'>
+              {{opt[1]}}
+            </option>
+          </select>
+        </div>
       </div>
     </div>
   `,
@@ -1032,6 +934,10 @@ const PageList = Vue.component('page-list', {
     audio_options: [
       [false, "No audio"],
       [true, "For all videos"],
+    ],
+    scale_options: [
+      [false, "Force fullscreen"],
+      [true, "Preserve aspect ratio"],
     ],
   }),
   computed: {
@@ -1059,11 +965,22 @@ const PageList = Vue.component('page-list', {
     },
     audio: {
       get() {
-        return this.$store.state.config.audio || false
+        return this.$store.state.config.audio
       },
       set(v) {
         this.$store.commit('set_config', {
           key: 'audio',
+          val: v,
+        })
+      },
+    },
+    scale: {
+      get() {
+        return this.$store.state.config.scale
+      },
+      set(v) {
+        this.$store.commit('set_config', {
+          key: 'scale',
           val: v,
         })
       },
@@ -1095,9 +1012,6 @@ const router = new VueRouter({
 ib.setDefaultStyle()
 
 ib.ready.then(() => {
-  if (ib.assetChooser) {
-    install_native_asset_chooser()
-  }
   store.dispatch('init', {
     assets: ib.assets,
     node_assets: ib.node_assets,

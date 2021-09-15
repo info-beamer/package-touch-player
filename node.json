@@ -130,5 +130,11 @@
         "name": "transition_time",
         "type": "float",
         "default": 0.3
+    }, {
+        "title": "Aspect fit",
+        "ui_width": 4,
+        "name": "scale",
+        "type": "boolean",
+        "default": false
     }]
 }
