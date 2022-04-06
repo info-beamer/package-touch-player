@@ -21,9 +21,9 @@
       ib.setDefaultStyle();
 
       document.getElementById('screen').addEventListener('click', function(evt) {
-        ib.sendCommand("input", {down: true, x: evt.offsetX*4, y: evt.offsetY*4})
+        ib.sendCommand("touch", {down: true, x: evt.offsetX*4, y: evt.offsetY*4})
         setTimeout(function() {
-          ib.sendCommand("input", {down: false, x: evt.offsetX*4, y: evt.offsetY*4})
+          ib.sendCommand("touch", {down: false, x: evt.offsetX*4, y: evt.offsetY*4})
         }, 200)
       })
     </script>
