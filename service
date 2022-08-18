@@ -54,7 +54,7 @@ def device_event(device, event):
                 event.value, abs_infos.get(ecodes.ABS_Y), screen_h
             )
     if event.type == ecodes.EV_KEY and event.code in ecodes.KEY:
-        node['/keyboard'](dict(
+        node['/event/keyboard'](dict(
             key = ecodes.KEY[event.code].replace("KEY_", "").lower(),
             action = {
                 KeyEvent.key_up: "up",
@@ -74,7 +74,7 @@ def monitor_touch():
             except IOError:
                 # device disconnected
                 pass
-        node['/touch'](touch_state)
+        node['/event/touch'](touch_state)
 
 def monitor_gpio():
     pins = set()
@@ -86,7 +86,7 @@ def monitor_gpio():
     for pin in pins:
         ibdevice.gpio.monitor(pin)
     for pin, high in ibdevice.gpio.poll_forever():
-        node['/gpio'](dict(
+        node['/event/gpio'](dict(
             pin = pin,
             high = high,
         ))

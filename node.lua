@@ -713,7 +713,7 @@ end
 local player = Player()
 
 util.data_mapper{
-    touch = function(raw)
+    ["event/touch"] = function(raw)
         touch_state = json.decode(raw)
         -- coordinates are native screen coordinates and
         -- must be unprojected to the virtual screen space.
@@ -721,11 +721,11 @@ util.data_mapper{
             touch_state.x, touch_state.y
         )
     end,
-    gpio = function(raw)
+    ["event/gpio"] = function(raw)
         local gpio_event = json.decode(raw)
         gpio_state[gpio_event.pin] = gpio_event.high
     end,
-    keyboard = function(raw)
+    ["event/keyboard"] = function(raw)
         local key_event = json.decode(raw)
         if key_event.action == "up" then
             keypresses[#keypresses+1] = key_event.key

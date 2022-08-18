@@ -63,6 +63,10 @@ If you need help with this package, you can post to this thread on the
 
 # Changelog
 
+## Version 2022-08-18
+
+* Unify node events to work similar to the scheduled player
+
 ## Version 2021-09-15
 
 * Update support for preserving content aspect ratio
