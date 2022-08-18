@@ -727,7 +727,7 @@ util.data_mapper{
     end,
     ["event/keyboard"] = function(raw)
         local key_event = json.decode(raw)
-        if key_event.action == "up" then
+        if key_event.action == "down" then
             keypresses[#keypresses+1] = key_event.key
         end
     end,
