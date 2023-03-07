@@ -193,7 +193,7 @@ Vue.component('screen-preview', {
             <rect :x='draw.x' :y='draw.y'
               :width='draw.w' :height='draw.h'
               fill='transparent'
-              stroke='#fff' stroke-width='2' 
+              stroke='#fff' stroke-width='2'
               v-if='draw'
             />
           </g>
@@ -335,7 +335,7 @@ Vue.component('link-edit', {
         </select>
       </span>
       <span v-if='link.type == "key"'>
-        on press of 
+        on press of
         <select class="form-control key-select" v-model='key'>
           <option :value='key.v' v-for='key in keys'>
             {{key.text}}
@@ -607,7 +607,7 @@ const PageEdit = Vue.component('page-edit', {
       </div>
       <screen-preview
         :max_width='736' :max_height='800'
-        @area='add_touch' @click='click'
+        @area='area' @click='click'
       >
         <image
           :href='asset.thumb + "?size=500&crop=none"'
@@ -615,20 +615,44 @@ const PageEdit = Vue.component('page-edit', {
           :width='$store.getters.screen.w'
           :height='$store.getters.screen.h'
         />
+        <text x='5' y='25' fill="#ccc" style="font-size:25px" v-if='touch_links.length == 0'>
+          Click and drag to draw touch area
+        </text>
         <g v-for='link in touch_links' class='link-preview'>
-          <image
-            :href='link.asset.thumb + "?size=500&crop=none"'
-            :x='link.options.x1' :y='link.options.y1'
-            :width='link.options.x2-link.options.x1'
-            :height='link.options.y2-link.options.y1'
-            v-if='link.target_uuid != "back"'
-          />
-          <rect :x='link.options.x1' :y='link.options.y1'
-            :width='link.options.x2-link.options.x1'
-            :height='link.options.y2-link.options.y1'
-            :fill='link.color' fill-opacity='0.3'
-            stroke='#fff' stroke-width='2' 
-          />
+          <template v-if='link.id == resize_link_id'>
+            <rect :x='link.options.x1' :y='link.options.y1'
+              :width='link.options.x2-link.options.x1'
+              :height='link.options.y2-link.options.y1'
+              fill='white' fill-opacity='0.1'
+            />
+            <text :x="link.options.x1+5" :y="link.options.y1+25"
+              fill="#ccc" style="font-size:25px"
+            >
+              Redraw touch area
+            </text>
+          </template>
+          <template v-else>
+            <image
+              :href='link.asset.thumb + "?size=500&crop=none"'
+              :x='link.options.x1' :y='link.options.y1'
+              :width='link.options.x2-link.options.x1'
+              :height='link.options.y2-link.options.y1'
+              v-if='link.target_uuid != "back"'
+            />
+            <rect :x='link.options.x1' :y='link.options.y1'
+              :width='link.options.x2-link.options.x1'
+              :height='link.options.y2-link.options.y1'
+              :fill='link.color' fill-opacity='0.3'
+              stroke='#fff' stroke-width='2'
+            />
+            <text :x="link.options.x1+5" :y="link.options.y1+25"
+              fill="white" style="font-size:25px"
+            >
+              <tspan style='cursor:pointer' @mousedown.stop @click='resize_link(link.id)'>Resize</tspan>
+              |
+              <tspan style='cursor:pointer' @mousedown.stop @click='delete_link(link.id)'>Delete</tspan>
+            </text>
+          </template>
         </g>
       </screen-preview>
       <label>Links</label>
@@ -657,6 +681,7 @@ const PageEdit = Vue.component('page-edit', {
   `,
   data: () => ({
     current_uuid: null,
+    resize_link_id: null,
   }),
   created() {
     this.fetch()
@@ -786,6 +811,23 @@ const PageEdit = Vue.component('page-edit', {
         })
       }
     },
+    area(area) {
+      if (this.resize_link_id != null) {
+        this.$store.commit('update_link', {
+          uuid: this.current_uuid,
+          link_id: this.resize_link_id,
+          key: 'options', val: {
+            x1: area.x1,
+            y1: area.y1,
+            x2: area.x2,
+            y2: area.y2,
+          }
+        })
+        this.resize_link_id = null
+      } else {
+        this.add_touch(area)
+      }
+    },
     add_timeout() {
       this.$store.commit('add_link', {
         uuid: this.current_uuid,
@@ -847,6 +889,14 @@ const PageEdit = Vue.component('page-edit', {
             active_high: true,
           }
         }
+      })
+    },
+    resize_link(link_id) {
+      this.resize_link_id = link_id
+    },
+    delete_link(link_id) {
+      this.$store.commit('delete_link', {
+        uuid: this.current_uuid, link_id
       })
     },
   },
@@ -947,7 +997,7 @@ const PageList = Vue.component('page-list', {
       },
       set(v) {
         this.$store.commit('set_config', {
-          key: 'resolution', 
+          key: 'resolution',
           val: v,
         })
       },
@@ -958,7 +1008,7 @@ const PageList = Vue.component('page-list', {
       },
       set(v) {
         this.$store.commit('set_config', {
-          key: 'rotation', 
+          key: 'rotation',
           val: v,
         })
       },
