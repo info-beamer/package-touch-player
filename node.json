@@ -4,7 +4,8 @@
     "custom_ui": "config.html",
     "permissions": {
         "gpio": "Might need access to GPIO",
-        "input": "Might need access to input devices"
+        "input": "Might need access to input devices",
+        "network": "Needs network access for synchronization across devices"
     },
     "optional": [
         ".*(html|js)$",
@@ -18,39 +19,49 @@
         "itemname": "Page",
         "items": [{
             "title": "Name",
-            "ui_width": 3,
+            "ui_width": 4,
             "name": "name",
             "type": "string",
             "default": "Content Page"
         }, {
             "title": "UUID",
-            "ui_width": 3,
+            "ui_width": 4,
             "name": "uuid",
             "type": "string",
+            "readonly": true,
             "default": ""
         }, {
             "title": "Asset",
-            "ui_width": 3,
+            "ui_width": 4,
             "name": "asset",
             "type": "resource",
             "valid": ["image", "video"],
             "default": "empty.png"
         }, {
-            "title": "Duration",
-            "ui_width": 3,
-            "name": "duration",
-            "type": "duration",
-            "default": 10
+            "title": "On Enter trigger",
+            "ui_width": 12,
+            "name": "on_enter",
+            "type": "string",
+            "hint": "Triggered once this page starts playing.",
+            "default": ""
+        }, {
+            "title": "On Exit trigger",
+            "ui_width": 12,
+            "name": "on_exit",
+            "type": "string",
+            "hint": "Triggered once this page is unloaded.",
+            "default": ""
         }, {
             "title": "Links",
             "name": "links",
             "type": "list",
             "itemname": "Target",
             "items": [{
-                "title": "Target page",
+                "title": "Target page UUID",
                 "ui_width": 3,
                 "name": "target_uuid",
                 "type": "string",
+                "readonly": true,
                 "default": ""
             }, {
                 "title": "Transition",
@@ -86,11 +97,24 @@
                 "name": "options",
                 "type": "json",
                 "default": {}
+            }, {
+                "title": "On Activated trigger",
+                "ui_width": 12,
+                "name": "on_trigger",
+                "type": "string",
+                "hint": "Triggered immediately once this link is activated.",
+                "default": ""
             }]
         }]
     }, {
+        "title": "Resolution",
+        "ui_width": 3,
+        "name": "resolution",
+        "type": "json",
+        "default": [1920, 1080]
+    }, {
         "title": "Display rotation",
-        "ui_width": 4,
+        "ui_width": 3,
         "name": "rotation",
         "type": "select",
         "hint": "Rotate content clockwise?",
@@ -103,14 +127,25 @@
         ],
         "default": 0
     }, {
-        "title": "Resolution",
-        "ui_width": 4,
-        "name": "resolution",
-        "type": "json",
-        "default": [1920, 1080]
+        "title": "Audio",
+        "ui_width": 3,
+        "name": "audio",
+        "type": "boolean",
+        "default": false
+    }, {
+        "title": "Aspect fit",
+        "ui_width": 3,
+        "name": "scale",
+        "type": "boolean",
+        "default": false
+    },
+
+    {
+        "title": "Advanced configuration",
+        "type": "section"
     }, {
         "title": "Touch calibration",
-        "ui_width": 4,
+        "ui_width": 3,
         "name": "calibration",
         "type": "select",
         "options": [
@@ -119,22 +154,27 @@
         ],
         "default": "1:1"
     }, {
-        "title": "Audio",
-        "ui_width": 4,
-        "name": "audio",
-        "type": "boolean",
-        "default": false
-    }, {
         "title": "Transition time",
-        "ui_width": 4,
+        "ui_width": 2,
         "name": "transition_time",
         "type": "float",
         "default": 0.3
     }, {
-        "title": "Aspect fit",
-        "ui_width": 4,
-        "name": "scale",
-        "type": "boolean",
-        "default": false
+        "title": "Peer to peer input",
+        "ui_width": 7,
+        "name": "local_only",
+        "type": "select",
+        "options": [
+            [true, "P2P disabled"],
+            [false, "Propagate input events to all local devices running same setup"]
+        ],
+        "default": true
+    }, {
+        "title": "Trigger UDP target address",
+        "ui_width": 12,
+        "name": "trigger_target",
+        "type": "string",
+        "placeholder": "E.g. 255.255.255.255. Leave empty to disable",
+        "default": ""
     }]
 }

@@ -3,6 +3,9 @@ util.no_globals()
 local json = require "json"
 local matrix = require "matrix2d"
 local easing = require "easing"
+local rpc = require "rpc"
+
+local py = rpc.create()
 
 local frame_delay = 1/60
 pcall(function()
@@ -93,6 +96,10 @@ local function VirtualScreen()
 end
 local screen = VirtualScreen()
 
+local function trigger_event(event)
+    py.trigger(event)
+end
+
 local function ImageLRU(max_cached)
     max_cached = max_cached or 10
     local loaded = {}
@@ -142,8 +149,9 @@ end
 
 local img_cache = ImageLRU(10)
 
-local function Image(file)
+local function Image(file, on_enter, on_exit)
     local res
+    local sent_enter = false
 
     local function draw_res(res, x1, y1, x2, y2, alpha)
         if scale then
@@ -276,6 +284,10 @@ local function Image(file)
     end
 
     local function draw(mode, effect, progress, step)
+        if mode == "enter" and not sent_enter then
+            sent_enter = true
+            trigger_event(on_enter)
+        end
         if mode == "play" then
             draw_res(res, 0, 0, WIDTH, HEIGHT)
         elseif mode == "load" then
@@ -287,6 +299,7 @@ local function Image(file)
 
     local function unload()
         img_cache.release(res)
+        trigger_event(on_exit)
     end
 
     return {
@@ -298,8 +311,9 @@ local function Image(file)
     }
 end
 
-local function Video(file)
+local function Video(file, on_enter, on_exit)
     local res
+    local sent_enter = false
 
     local function draw_res(res, layer, alpha, x1_add, y1_add, x2_add, y2_add)
         x1_add = x1_add or 0
@@ -432,6 +446,10 @@ local function Video(file)
     end
 
     local function draw(mode, effect, progress, step)
+        if mode == "enter" and not sent_enter then
+            sent_enter = true
+            trigger_event(on_enter)
+        end
         if mode == "exit" then
             res:stop()
         else
@@ -448,6 +466,7 @@ local function Video(file)
 
     local function unload()
         res:dispose()
+        trigger_event(on_exit)
     end
 
     return {
@@ -510,7 +529,7 @@ local function Transition(exit_t, enter_t, exit_effect, enter_effect)
 end
 
 local function Player()
-    local current, next = Image(resource.open_file "empty.png")
+    local current, next = Image(resource.open_file "empty.png", "", "")
     local history = {}
     local pages_by_uuid = {}
     local home, page -- home and current page
@@ -548,7 +567,7 @@ local function Player()
         history = {}
     end
 
-    local function transition_to_page(page_uuid, effect, time)
+    local function transition_to_page(page_uuid, effect, on_trigger, time)
         print("transition init to ", page_uuid, effect, time, #history)
         if page_uuid == "home" then
             history = {}
@@ -574,11 +593,12 @@ local function Player()
             player = ({
                 image = Image,
                 video = Video,
-            })[page.asset.type](page.asset.asset),
+            })[page.asset.type](page.asset.asset, page.on_enter, page.on_exit),
             exit_effect = effect,
             exit_t = time,
             enter_effect = effect,
             enter_t = time,
+            on_trigger = on_trigger,
         }
     end
 
@@ -592,7 +612,7 @@ local function Player()
         if not page then
             print "no current page. going back home"
             return transition_to_page(
-                home.uuid, "zoom_in", transition_time
+                home.uuid, "zoom_in", "", transition_time
             )
         end
 
@@ -606,7 +626,8 @@ local function Player()
                        touch_y > link.options.y1 and touch_y < link.options.y2 
                     then
                         local switch = transition_to_page(
-                            link.target_uuid, link.transition, transition_time
+                            link.target_uuid, link.transition,
+                            link.on_trigger, transition_time
                         )
                         if switch then
                             accept_touch = false
@@ -629,7 +650,8 @@ local function Player()
                gpio_state[link.options.pin] == link.options.active_high
             then
                 return transition_to_page(
-                    link.target_uuid, link.transition, transition_time
+                    link.target_uuid, link.transition,
+                    link.on_trigger, transition_time
                 )
             end
 
@@ -637,7 +659,8 @@ local function Player()
                sys.now() > last_switch + link.options.timeout
             then
                 return transition_to_page(
-                    link.target_uuid, link.transition, transition_time
+                    link.target_uuid, link.transition,
+                    link.on_trigger, transition_time
                 )
            end
        end
@@ -647,7 +670,8 @@ local function Player()
            for i, link in ipairs(page.links) do
                if link.type == "key" and link.options.key == pressed_key then
                    return transition_to_page(
-                       link.target_uuid, link.transition, transition_time
+                       link.target_uuid, link.transition,
+                       link.on_trigger, transition_time
                    )
                end
            end
@@ -664,6 +688,7 @@ local function Player()
 
             local switch = decide_switch()
             if switch then
+                trigger_event(switch.on_trigger)
                 next = switch.player
                 next.load()
                 transition = Transition(
