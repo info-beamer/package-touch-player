@@ -405,7 +405,7 @@ Vue.component('link-edit', {
     timeouts() {
       let timeouts = [
         {disabled: 'Defaults'},
-        {t:2}, {t:5}, {t:10}, {t:15},  {t:30},  {t:45},  {t:60}
+        {t:2}, {t:5}, {t:10}, {t:15},  {t:30},  {t:45},  {t:60}, {t:300}, {t:600}, {t:900},
       ]
       const assets = this.$store.getters.all_assets
       const asset = assets[this.page.asset]
@@ -999,7 +999,11 @@ Vue.filter('capitalize', value => {
   return value.charAt(0).toUpperCase() + value.slice(1)
 })
 Vue.filter('human_duration', value => {
-  return value.toFixed(0) + 's'
+  if (value > 120) {
+    return (value / 60).toFixed(0) + ' minutes'
+  } else {
+    return value.toFixed(0) + ' seconds'
+  }
 })
 
 const router = new VueRouter({
