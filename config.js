@@ -587,7 +587,7 @@ const PageEdit = Vue.component('page-edit', {
         <div class='col-xs-3'>
           <router-link :to='{name: "index"}' class='btn btn-default btn-block'>
             <span class='glyphicon glyphicon-th-list'></span>
-            Page index
+            Settings / Page list
           </router-link>
         </div>
         <div class='col-xs-6'>
