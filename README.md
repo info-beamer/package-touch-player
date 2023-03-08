@@ -68,6 +68,7 @@ If you need help with this package, you can post to this thread on the
 * Added support for propagating input events to devices running the same touch player setup within the local network.  Requires P2P enabled devices.
 * Added support for sending UDP messages for page enter/exit and link activation. This can be used to switch content on other devices.
 * Both features are not exposed through the default UI. Instead, Shift-click on the "Content Configuration" box on the left side in the setup's configuration page.
+* Added resizing and deleting touch areas within the graphical view
 
 ## Version 2022-08-18
 
