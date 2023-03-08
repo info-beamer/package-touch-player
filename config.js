@@ -769,6 +769,7 @@ const PageEdit = Vue.component('page-edit', {
         uuid = this.default_uuid
       }
       this.current_uuid = uuid
+      this.resize_link_id = null
       console.log('current_uuid=', uuid)
     },
     click(click) {
