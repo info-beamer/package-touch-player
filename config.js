@@ -599,7 +599,7 @@ const PageEdit = Vue.component('page-edit', {
         <div class='col-xs-3'>
           <asset-browser
             valid="image,video"
-            title="Select page asset"
+            title="Select page asset.."
             :selected_asset_spec="asset.id"
             @assetSelected="select_asset"
           />
