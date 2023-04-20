@@ -73,7 +73,10 @@ const store = new Vuex.Store({
       pages.sort((a, b) => {
         const name_a = a.name.toLocaleLowerCase()
         const name_b = b.name.toLocaleLowerCase()
-        return (b.index - a.index) || name_a.localeCompare(name_b)
+        return (b.index - a.index) || name_a.localeCompare(name_b, undefined, {
+          numeric: true,
+          sensitivity: 'base'
+        })
       })
       return pages
     },
