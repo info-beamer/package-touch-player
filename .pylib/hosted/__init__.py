@@ -43,6 +43,14 @@ from hosted.scheduler import timespec_from_config
 
 _types = {}
 
+class OptionValueWrapper(object):
+    def __init__(self, value):
+        self._value = value
+
+class OptionSection(OptionValueWrapper):
+    def is_selected(self, key):
+        return key in self._value
+
 def init_types():
     def type(fn):
         _types[fn.__name__] = fn
@@ -62,7 +70,7 @@ def init_types():
 
     @type
     def section(value):
-        return value
+        return OptionSection(value)
 
     @type
     def boolean(value):
@@ -102,6 +110,18 @@ def init_types():
 
     @type
     def json(value):
+        return value
+
+    @type
+    def id(value):
+        return value
+
+    @type
+    def playlist(value):
+        return value
+
+    @type
+    def list_select(value):
         return value
 
     @type
@@ -402,7 +422,7 @@ class Configuration(object):
         def parse_recursive(options, config, target):
             # print 'parsing', config
             for option in options:
-                if not 'name' in option:
+                if not 'name' in option or not option['name'] in config:
                     continue
                 if option['type'] == 'list':
                     items = []
@@ -426,6 +446,12 @@ class Configuration(object):
     @property
     def metadata(self):
         return self._config['__metadata']
+
+    def __contains__(self, key):
+        return key in self._parsed
+
+    def get(self, key, default=None):
+        return self._parsed.get(key, default)
 
     def __getitem__(self, key):
         return self._parsed[key]

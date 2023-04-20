@@ -1002,6 +1002,11 @@ class TimeSpec(object):
                     return False
         return True
 
+    def active(self, tz, dt_naive_local):
+        return bool(self.spans_between(
+            tz, dt_naive_local, dt_naive_local + datetime.timedelta(seconds=1)
+        ))
+
     def spans_between(self, tz, dt_naive_local_min, dt_naive_local_max):
         if dt_naive_local_min >= dt_naive_local_max:
             return []
@@ -1009,10 +1014,10 @@ class TimeSpec(object):
         # print('spans between')
         # print(dt_naive_local_min, dt_naive_local_max)
         dt_naive_local_occurrence_min = dt_naive_local_min - datetime.timedelta(
-            minutes = self.max_span_offset - 1
+            minutes = self.max_span_offset
         )
         dt_naive_local_occurrence_max = dt_naive_local_max - datetime.timedelta(
-            minutes = self.min_span_offset - 1
+            minutes = self.min_span_offset
         )
         # print('probing between')
         # print(dt_naive_local_occurrence_min, dt_naive_local_occurrence_max)
