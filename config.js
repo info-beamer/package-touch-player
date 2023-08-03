@@ -408,7 +408,7 @@ Vue.component('link-edit', {
     timeouts() {
       let timeouts = [
         {disabled: 'Defaults'},
-        {t:2}, {t:5}, {t:10}, {t:15},  {t:30},  {t:45},  {t:60}, {t:300}, {t:600}, {t:900},
+        {t:2}, {t:5}, {t:10}, {t:15},  {t:30},  {t:45},  {t:60}, {t:120}, {t:300}, {t:600}, {t:900},
       ]
       const assets = this.$store.getters.all_assets
       const asset = assets[this.page.asset]
